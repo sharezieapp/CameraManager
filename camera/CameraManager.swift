@@ -574,14 +574,16 @@ open class CameraManager: NSObject, AVCaptureFileOutputRecordingDelegate, UIGest
             }
         }
         
-        imageCompletion(CaptureResult(image))
+        imageCompletion(CaptureResult(imageData))
     }
     
-    open func saveImageManually(image: UIImage, _ imageCompletion: @escaping (CaptureResult) -> Void) {
-        guard let imageData: Data = image.jpegData(compressionQuality: 1.0) else {
-            imageCompletion(.failure(NSError(domain: "CameraManager", code: 1, userInfo: ["Error": "failed to convert image to data."])))
+    open func saveImageManually(imageData: Data, _ imageCompletion: @escaping (CaptureResult) -> Void) {
+        guard let img = UIImage(data: imageData) else {
+            imageCompletion(.failure(NSError()))
             return
         }
+        
+        let image = fixOrientation(withImage: img)
         
         let filePath = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("tempImg\(Int(Date().timeIntervalSince1970)).jpg")
         
