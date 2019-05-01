@@ -579,6 +579,7 @@ open class CameraManager: NSObject, AVCaptureFileOutputRecordingDelegate, UIGest
     
     open func saveImageManually(image: UIImage, _ imageCompletion: @escaping (CaptureResult) -> Void) {
         guard let imageData: Data = image.jpegData(compressionQuality: 1.0) else {
+            imageCompletion(.failure(NSError(domain: "CameraManager", code: 1, userInfo: ["Error": "failed to convert image to data."])))
             return
         }
         
