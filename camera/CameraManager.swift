@@ -577,6 +577,36 @@ open class CameraManager: NSObject, AVCaptureFileOutputRecordingDelegate, UIGest
         imageCompletion(CaptureResult(image))
     }
     
+    open func saveImageManually(image: UIImage, _ imageCompletion: @escaping (CaptureResult) -> Void) {
+        guard let imageData: Data = image.jpegData(compressionQuality: 1.0) else {
+            return
+        }
+        
+        let filePath = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("tempImg\(Int(Date().timeIntervalSince1970)).jpg")
+        
+        let newImageData = _imageDataWithEXIF(forImage: image, imageData) as Data
+        
+        do {
+            
+            try newImageData.write(to: filePath)
+            
+            // make sure that doesn't fail the first time
+            if PHPhotoLibrary.authorizationStatus() != .authorized {
+                PHPhotoLibrary.requestAuthorization { (status) in
+                    if status == PHAuthorizationStatus.authorized {
+                        self._saveImageToLibrary(atFileURL: filePath, imageCompletion)
+                    }
+                }
+            } else {
+                self._saveImageToLibrary(atFileURL: filePath, imageCompletion)
+            }
+            
+        } catch {
+            imageCompletion(.failure(error))
+            return
+        }
+    }
+    
     fileprivate func _setVideoWithGPS(forLocation location: CLLocation) {
         let metadata = AVMutableMetadataItem()
         metadata.keySpace = AVMetadataKeySpace.quickTimeMetadata
